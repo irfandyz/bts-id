@@ -44,7 +44,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"jhon_doe\",\n  \"password\": \"supersecret\",\n  \"password_confirmation\": \"supersecret\",\n  \"name\": \"Jhon Doe\"\n}"
+              "raw": "{\n  \"username\": \"jhon_doe\",\n  \"password\": \"supersecret\",\n  \"password_confirmation\": \"supersecret\",\n  \"email\": \"jhon@example.com\",\n  \"name\": \"Jhon Doe\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
