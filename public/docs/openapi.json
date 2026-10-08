@@ -1,0 +1,487 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Product Management & Auth REST API",
+    "description": "REST API for Product Management and Authentication with Rate Limiting, Caching, and Token Authentication.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Sanctum Token"
+      }
+    },
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "Awesome T-Shirt" },
+          "price": { "type": "number", "format": "float", "example": 99.99 },
+          "description": { "type": "string", "example": "High-quality cotton t-shirt" },
+          "category": { "type": "string", "example": "Clothes" },
+          "images": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["https://placeimg.com/640/480/any"]
+          },
+          "created_at": { "type": "string", "example": "2025-01-01 15:01:04" },
+          "created_by": { "type": "string", "example": "Jhon Doe" },
+          "created_by_id": { "type": "string", "example": "1" },
+          "updated_at": { "type": "string", "example": "2025-01-01 15:01:04" },
+          "updated_by": { "type": "string", "example": "Jhon Doe" },
+          "updated_by_id": { "type": "string", "example": "1" }
+        }
+      },
+      "Error400": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Validation error" },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      },
+      "Error404": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Product not found" }
+        }
+      },
+      "Error429": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Too many requests. Please wait 5 seconds before trying again." }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register new user",
+        "description": "Rate limited to 3 requests per 60 seconds.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password", "password_confirmation"],
+                "properties": {
+                  "username": { "type": "string", "example": "jhon_doe" },
+                  "password": { "type": "string", "example": "supersecret" },
+                  "password_confirmation": { "type": "string", "example": "supersecret" },
+                  "name": { "type": "string", "example": "Jhon Doe" },
+                  "email": { "type": "string", "example": "jhon@example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "User registered successfully" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer", "example": 1 },
+                        "username": { "type": "string", "example": "jhon_doe" },
+                        "name": { "type": "string", "example": "Jhon Doe" },
+                        "email": { "type": "string", "nullable": true, "example": null },
+                        "created_at": { "type": "string", "example": "2025-01-01 15:01:04" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error400" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error429" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login user",
+        "description": "Rate limited to 3 requests per 60 seconds.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string", "example": "jhon_doe" },
+                  "password": { "type": "string", "example": "supersecret" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Login successful" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer", "example": 1 },
+                            "username": { "type": "string", "example": "jhon_doe" },
+                            "name": { "type": "string", "example": "Jhon Doe" }
+                          }
+                        },
+                        "authentication_token": { "type": "string", "example": "1|abcdef..." },
+                        "refresh_token": { "type": "string", "example": "2|ghijkl..." },
+                        "token_type": { "type": "string", "example": "Bearer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Invalid username or password" }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error429" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "summary": "Get all products",
+        "description": "Supports search keyword, category filter, pagination, and caching.",
+        "tags": ["Products"],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search by product name/description",
+            "required": false,
+            "schema": { "type": "string", "example": "T-Shirt" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by category name",
+            "required": false,
+            "schema": { "type": "string", "example": "Clothes" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "schema": { "type": "integer", "default": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Product" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new product",
+        "description": "Requires authentication. Rate limited to 1 request per 5 seconds.",
+        "tags": ["Products"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "price", "category", "images"],
+                "properties": {
+                  "title": { "type": "string", "example": "Awesome T-Shirt" },
+                  "price": { "type": "number", "format": "float", "example": 99.99 },
+                  "description": { "type": "string", "example": "High-quality cotton t-shirt" },
+                  "category": { "type": "string", "example": "Clothes" },
+                  "images": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "example": ["https://placeimg.com/640/480/any"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Product" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error400" }
+              }
+            }
+          },
+          "401": { "description": "Unauthenticated" },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error429" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "summary": "Get product detail",
+        "description": "Returns single product details with caching.",
+        "tags": ["Products"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Product" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error404" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update product",
+        "description": "Requires authentication. Rate limited to 1 request per 5 seconds.",
+        "tags": ["Products"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "Updated T-Shirt" },
+                  "price": { "type": "number", "format": "float", "example": 79.99 },
+                  "description": { "type": "string", "example": "Updated description" },
+                  "category": { "type": "string", "example": "Clothes" },
+                  "images": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "example": ["https://placeimg.com/640/480/new"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Product" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error400" }
+              }
+            }
+          },
+          "401": { "description": "Unauthenticated" },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error404" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error429" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete product",
+        "description": "Requires authentication. Rate limited to 1 request per 5 seconds.",
+        "tags": ["Products"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Product deleted successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthenticated" },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error404" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error429" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
