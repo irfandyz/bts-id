@@ -10,10 +10,13 @@ RUN apk add --no-cache \
     sqlite-dev \
     oniguruma-dev \
     libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     libxml2-dev
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite pdo_mysql mbstring zip pcntl bcmath opcache
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_sqlite pdo_mysql mbstring zip pcntl bcmath opcache gd
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

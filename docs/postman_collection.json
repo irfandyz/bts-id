@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "bfa8619a-cf2a-4361-9c3f-c38a16db8a2a",
-    "name": "BTS Product & Auth REST API",
+    "name": "BTS RECRUITMENT TEST ",
     "description": "Complete collection for Product Management and Authentication REST API with Rate Limiting, Caching, and Sanctum Tokens.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -48,8 +48,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
             },
             "description": "Register a new user. Rate limited to 3 requests per 60 seconds."
           },
@@ -92,8 +98,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             },
             "description": "Login and retrieve authentication_token and refresh_token. Rate limited to 3 requests per 60 seconds."
           },
@@ -117,8 +129,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
             }
           },
           "response": []
@@ -141,8 +159,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "refresh"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
             }
           },
           "response": []
@@ -165,8 +189,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "logout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
             }
           },
           "response": []
@@ -189,13 +219,34 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/products?search=&category=&limit=10&page=1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "products"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
               "query": [
-                { "key": "search", "value": "", "description": "Search keyword" },
-                { "key": "category", "value": "", "description": "Category filter" },
-                { "key": "limit", "value": "10", "description": "Pagination limit" },
-                { "key": "page", "value": "1", "description": "Page number" }
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search keyword"
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "description": "Category filter"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Pagination limit"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                }
               ]
             }
           },
@@ -214,8 +265,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/products/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "products", "1"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "1"
+              ]
             }
           },
           "response": []
@@ -248,8 +305,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/upload",
-              "host": ["{{base_url}}"],
-              "path": ["api", "upload"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "upload"
+              ]
             },
             "description": "Upload a file (image) and get the public URL to be used in Product images array."
           },
@@ -282,8 +344,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/products",
-              "host": ["{{base_url}}"],
-              "path": ["api", "products"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
             },
             "description": "Create a new product using image URLs. Requires valid authorization token. Rate limited to 1 request per 5 seconds."
           },
@@ -308,17 +375,42 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "title", "value": "Awesome T-Shirt with File", "type": "text" },
-                { "key": "price", "value": "99.99", "type": "text" },
-                { "key": "description", "value": "High-quality cotton t-shirt", "type": "text" },
-                { "key": "category", "value": "Clothes", "type": "text" },
-                { "key": "images[]", "type": "file", "src": [] }
+                {
+                  "key": "title",
+                  "value": "Awesome T-Shirt with File",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "99.99",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "High-quality cotton t-shirt",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "Clothes",
+                  "type": "text"
+                },
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "src": []
+                }
               ]
             },
             "url": {
               "raw": "{{base_url}}/api/products",
-              "host": ["{{base_url}}"],
-              "path": ["api", "products"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
             },
             "description": "Create a new product by directly uploading image files via multipart/form-data."
           },
@@ -351,8 +443,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/products/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "products", "1"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "1"
+              ]
             },
             "description": "Update product by ID. Requires valid authorization token. Rate limited to 1 request per 5 seconds."
           },
@@ -376,8 +474,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/products/1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "products", "1"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "1"
+              ]
             },
             "description": "Delete product by ID. Requires valid authorization token. Rate limited to 1 request per 5 seconds."
           },

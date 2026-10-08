@@ -190,7 +190,7 @@ class ProductTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $file = UploadedFile::fake()->image('shirt.jpg');
+        $file = UploadedFile::fake()->create('shirt.jpg', 100, 'image/jpeg');
 
         $response = $this->post('/api/products', [
             'title' => 'Shirt with Uploaded Image',
@@ -218,7 +218,7 @@ class ProductTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $file = UploadedFile::fake()->image('photo.png');
+        $file = UploadedFile::fake()->create('photo.png', 100, 'image/png');
 
         $response = $this->post('/api/upload', [
             'image' => $file,
@@ -343,6 +343,37 @@ class ProductTest extends TestCase
         $this->assertDatabaseMissing('products', [
             'id' => $product->id,
         ]);
+    }
+
+    public function test_delete_product_cleans_up_local_storage_images(): void
+    {
+        Storage::fake('public');
+
+        $user = User::create([
+            'username' => 'jhon_doe',
+            'password' => bcrypt('supersecret'),
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $file = UploadedFile::fake()->create('item.png', 100, 'image/png');
+        $storedPath = $file->store('products', 'public');
+        $fullUrl = url('storage/'.$storedPath);
+
+        Storage::disk('public')->assertExists($storedPath);
+
+        $product = Product::create([
+            'title' => 'Product With Local Image',
+            'price' => 15.0,
+            'category' => 'Gadgets',
+            'images' => [$fullUrl],
+        ]);
+
+        $response = $this->deleteJson("/api/products/{$product->id}");
+
+        $response->assertStatus(200);
+        $this->assertDatabaseMissing('products', ['id' => $product->id]);
+        Storage::disk('public')->assertMissing($storedPath);
     }
 
     public function test_delete_non_existent_product_returns_404(): void

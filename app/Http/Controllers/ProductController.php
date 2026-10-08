@@ -8,16 +8,16 @@ use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of products with filtering, searching, and pagination.
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $search = $request->query('search');
         $category = $request->query('category');
@@ -27,7 +27,7 @@ class ProductController extends Controller
         $cacheVersion = Cache::get('products_cache_version', 1);
         $cacheKey = "products:v{$cacheVersion}:s={$search}:c={$category}:l={$limit}:p={$page}";
 
-        $products = Cache::remember($cacheKey, 60, function () use ($search, $category, $limit) {
+        $result = Cache::remember($cacheKey, 60, function () use ($search, $category, $limit) {
             $query = Product::query();
 
             if (! empty($search)) {
@@ -41,30 +41,34 @@ class ProductController extends Controller
                 $query->where('category', $category);
             }
 
-            return $query->latest('id')->paginate($limit);
+            $paginated = $query->latest('id')->paginate($limit);
+
+            return ProductResource::collection($paginated)->response()->getData(true);
         });
 
-        return ProductResource::collection($products);
+        return response()->json($result);
     }
 
     /**
      * Display the specified product.
      */
-    public function show(string|int $id): JsonResponse|ProductResource
+    public function show(string|int $id): JsonResponse
     {
         $cacheKey = "product_detail_{$id}";
 
-        $product = Cache::remember($cacheKey, 60, function () use ($id) {
-            return Product::find($id);
+        $productData = Cache::remember($cacheKey, 60, function () use ($id) {
+            $product = Product::find($id);
+
+            return $product ? (new ProductResource($product))->response()->getData(true) : null;
         });
 
-        if (! $product) {
+        if (! $productData) {
             return response()->json([
                 'message' => 'Product not found',
             ], 404);
         }
 
-        return new ProductResource($product);
+        return response()->json($productData);
     }
 
     /**
@@ -141,6 +145,18 @@ class ProductController extends Controller
             return response()->json([
                 'message' => 'Product not found',
             ], 404);
+        }
+
+        // Clean up locally stored image files from disk if any
+        if (is_array($product->images)) {
+            foreach ($product->images as $imageUrl) {
+                if (is_string($imageUrl) && str_contains($imageUrl, '/storage/products/')) {
+                    $fileName = basename(parse_url($imageUrl, PHP_URL_PATH));
+                    if ($fileName && Storage::disk('public')->exists('products/'.$fileName)) {
+                        Storage::disk('public')->delete('products/'.$fileName);
+                    }
+                }
+            }
         }
 
         $product->delete();
