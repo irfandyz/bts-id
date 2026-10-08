@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 
 class StoreProductRequest extends FormRequest
 {
@@ -28,7 +29,18 @@ class StoreProductRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'category' => ['required', 'string', 'max:100'],
             'images' => ['required', 'array', 'min:1'],
-            'images.*' => ['required', 'string'],
+            'images.*' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if ($value instanceof UploadedFile) {
+                        if (! in_array(strtolower($value->getClientOriginalExtension()), ['jpg', 'jpeg', 'png', 'webp', 'gif'])) {
+                            $fail("The {$attribute} must be an image file (jpg, jpeg, png, webp, gif).");
+                        }
+                    } elseif (! is_string($value)) {
+                        $fail("The {$attribute} must be a valid image URL or uploaded image file.");
+                    }
+                },
+            ],
         ];
     }
 }

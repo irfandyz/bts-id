@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -175,6 +177,63 @@ class ProductTest extends TestCase
             'title' => 'Awesome T-Shirt',
             'created_by_id' => (string) $user->id,
         ]);
+    }
+
+    public function test_authenticated_user_can_create_product_with_uploaded_file(): void
+    {
+        Storage::fake('public');
+
+        $user = User::create([
+            'username' => 'jhon_doe',
+            'password' => bcrypt('supersecret'),
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $file = UploadedFile::fake()->image('shirt.jpg');
+
+        $response = $this->post('/api/products', [
+            'title' => 'Shirt with Uploaded Image',
+            'price' => 50.0,
+            'category' => 'Clothes',
+            'images' => [$file],
+        ], [
+            'Accept' => 'application/json',
+        ]);
+
+        $response->assertStatus(201);
+        $data = $response->json('data');
+        $this->assertNotEmpty($data['images']);
+        $this->assertStringContainsString('storage/products/', $data['images'][0]);
+    }
+
+    public function test_can_upload_image_via_upload_endpoint(): void
+    {
+        Storage::fake('public');
+
+        $user = User::create([
+            'username' => 'jhon_doe',
+            'password' => bcrypt('supersecret'),
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $file = UploadedFile::fake()->image('photo.png');
+
+        $response = $this->post('/api/upload', [
+            'image' => $file,
+        ], [
+            'Accept' => 'application/json',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'message',
+                'data' => [
+                    'url',
+                    'urls',
+                ],
+            ]);
     }
 
     public function test_product_validation_failure_returns_400_with_errors(): void

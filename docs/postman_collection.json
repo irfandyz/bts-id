@@ -221,7 +221,42 @@
           "response": []
         },
         {
-          "name": "Create Product",
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload"]
+            },
+            "description": "Upload a file (image) and get the public URL to be used in Product images array."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product (JSON with Image URLs)",
           "request": {
             "method": "POST",
             "header": [
@@ -250,7 +285,42 @@
               "host": ["{{base_url}}"],
               "path": ["api", "products"]
             },
-            "description": "Create a new product. Requires valid authorization token. Rate limited to 1 request per 5 seconds."
+            "description": "Create a new product using image URLs. Requires valid authorization token. Rate limited to 1 request per 5 seconds."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product (Multipart Form-Data File Upload)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Awesome T-Shirt with File", "type": "text" },
+                { "key": "price", "value": "99.99", "type": "text" },
+                { "key": "description", "value": "High-quality cotton t-shirt", "type": "text" },
+                { "key": "category", "value": "Clothes", "type": "text" },
+                { "key": "images[]", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"]
+            },
+            "description": "Create a new product by directly uploading image files via multipart/form-data."
           },
           "response": []
         },

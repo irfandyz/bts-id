@@ -207,6 +207,51 @@
             }
           }
         }
+    "/api/upload": {
+      "post": {
+        "summary": "Upload image file",
+        "description": "Upload an image file (JPG, PNG, WebP) and retrieve the public storage URL.",
+        "tags": ["Products"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Single image file"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Image uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Image(s) uploaded successfully" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "url": { "type": "string", "example": "http://localhost:8000/storage/products/abc.jpg" },
+                        "urls": { "type": "array", "items": { "type": "string" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/products": {

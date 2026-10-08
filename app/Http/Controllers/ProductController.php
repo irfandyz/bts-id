@@ -9,6 +9,7 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
@@ -72,6 +73,8 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): JsonResponse
     {
         $validated = $request->validated();
+        $validated['images'] = $this->handleImages($request);
+
         $user = $request->user();
 
         $userName = $user?->name ?: ($user?->username ?: 'System');
@@ -106,6 +109,11 @@ class ProductController extends Controller
         }
 
         $validated = $request->validated();
+
+        if ($request->has('images') || $request->hasFile('images')) {
+            $validated['images'] = $this->handleImages($request);
+        }
+
         $user = $request->user();
 
         $userName = $user?->name ?: ($user?->username ?: 'System');
@@ -142,6 +150,62 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Product deleted successfully',
         ], 200);
+    }
+
+    /**
+     * Upload single or multiple images endpoint.
+     */
+    public function upload(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => ['required_without:images', 'file', 'image', 'max:5120'],
+            'images' => ['required_without:image', 'array'],
+            'images.*' => ['file', 'image', 'max:5120'],
+        ]);
+
+        $urls = [];
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $urls[] = url('storage/'.$path);
+        }
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('products', 'public');
+                $urls[] = url('storage/'.$path);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Image(s) uploaded successfully',
+            'data' => [
+                'url' => $urls[0] ?? null,
+                'urls' => $urls,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Handle both URL strings and UploadedFile instances.
+     *
+     * @return array<string>
+     */
+    private function handleImages(Request $request): array
+    {
+        $processed = [];
+        $rawImages = $request->file('images') ?: $request->input('images', []);
+
+        foreach ($rawImages as $item) {
+            if ($item instanceof UploadedFile) {
+                $path = $item->store('products', 'public');
+                $processed[] = url('storage/'.$path);
+            } elseif (is_string($item)) {
+                $processed[] = $item;
+            }
+        }
+
+        return $processed;
     }
 
     /**

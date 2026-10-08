@@ -22,6 +22,7 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
 Route::middleware(['auth:sanctum', 'throttle:products-mutate'])->group(function () {
+    Route::post('/upload', [ProductController::class, 'upload']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
