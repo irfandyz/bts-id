@@ -47,8 +47,8 @@ class AuthController extends Controller
             return $this->error('Invalid username or password', 401);
         }
 
-        $authToken = $user->createToken('auth_token', ['access-api']);
-        $refreshToken = $user->createToken('refresh_token', ['issue-token']);
+        $authToken = $user->createToken('auth_token', ['access-api'], now()->addHours(1));
+        $refreshToken = $user->createToken('refresh_token', ['issue-token'], now()->addDays(7));
 
         return $this->success([
             'user' => [
@@ -69,11 +69,16 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
+        // Validate that this token has refresh capability
+        if (! $request->user()->tokenCan('issue-token')) {
+            return $this->error('Invalid token. A refresh token is required to refresh access.', 401);
+        }
+
         // Revoke the current token
         $request->user()->currentAccessToken()->delete();
 
-        $newAuthToken = $user->createToken('auth_token', ['access-api']);
-        $newRefreshToken = $user->createToken('refresh_token', ['issue-token']);
+        $newAuthToken = $user->createToken('auth_token', ['access-api'], now()->addHours(1));
+        $newRefreshToken = $user->createToken('refresh_token', ['issue-token'], now()->addDays(7));
 
         return $this->success([
             'authentication_token' => $newAuthToken->plainTextToken,
