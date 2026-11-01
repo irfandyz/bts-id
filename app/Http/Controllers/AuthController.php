@@ -25,16 +25,13 @@ class AuthController extends Controller
             'email' => $validated['email'] ?? null,
         ]);
 
-        return response()->json([
-            'message' => 'User registered successfully',
-            'data' => [
-                'id' => $user->id,
-                'username' => $user->username,
-                'name' => $user->name,
-                'email' => $user->email,
-                'created_at' => $user->created_at?->format('Y-m-d H:i:s'),
-            ],
-        ], 201);
+        return $this->success([
+            'id' => $user->id,
+            'username' => $user->username,
+            'name' => $user->name,
+            'email' => $user->email,
+            'created_at' => $user->created_at?->format('Y-m-d H:i:s'),
+        ], 'User registered successfully', 201);
     }
 
     /**
@@ -47,27 +44,22 @@ class AuthController extends Controller
         $user = User::where('username', $validated['username'])->first();
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
-            return response()->json([
-                'message' => 'Invalid username or password',
-            ], 401);
+            return $this->error('Invalid username or password', 401);
         }
 
         $authToken = $user->createToken('auth_token', ['access-api']);
         $refreshToken = $user->createToken('refresh_token', ['issue-token']);
 
-        return response()->json([
-            'message' => 'Login successful',
-            'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'name' => $user->name,
-                ],
-                'authentication_token' => $authToken->plainTextToken,
-                'refresh_token' => $refreshToken->plainTextToken,
-                'token_type' => 'Bearer',
+        return $this->success([
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'name' => $user->name,
             ],
-        ], 200);
+            'authentication_token' => $authToken->plainTextToken,
+            'refresh_token' => $refreshToken->plainTextToken,
+            'token_type' => 'Bearer',
+        ], 'Login successful');
     }
 
     /**
@@ -83,14 +75,11 @@ class AuthController extends Controller
         $newAuthToken = $user->createToken('auth_token', ['access-api']);
         $newRefreshToken = $user->createToken('refresh_token', ['issue-token']);
 
-        return response()->json([
-            'message' => 'Token refreshed successfully',
-            'data' => [
-                'authentication_token' => $newAuthToken->plainTextToken,
-                'refresh_token' => $newRefreshToken->plainTextToken,
-                'token_type' => 'Bearer',
-            ],
-        ]);
+        return $this->success([
+            'authentication_token' => $newAuthToken->plainTextToken,
+            'refresh_token' => $newRefreshToken->plainTextToken,
+            'token_type' => 'Bearer',
+        ], 'Token refreshed successfully');
     }
 
     /**
@@ -100,9 +89,7 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json([
-            'message' => 'Successfully logged out',
-        ]);
+        return $this->success(null, 'Successfully logged out');
     }
 
     /**
@@ -112,14 +99,12 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        return response()->json([
-            'data' => [
-                'id' => $user->id,
-                'username' => $user->username,
-                'name' => $user->name,
-                'email' => $user->email,
-                'created_at' => $user->created_at?->format('Y-m-d H:i:s'),
-            ],
+        return $this->success([
+            'id' => $user->id,
+            'username' => $user->username,
+            'name' => $user->name,
+            'email' => $user->email,
+            'created_at' => $user->created_at?->format('Y-m-d H:i:s'),
         ]);
     }
 }

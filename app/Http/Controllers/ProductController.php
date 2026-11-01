@@ -43,10 +43,16 @@ class ProductController extends Controller
 
             $paginated = $query->latest('id')->paginate($limit);
 
-            return ProductResource::collection($paginated)->response()->getData(true);
+            return [
+                'items' => ProductResource::collection($paginated)->resolve(),
+                ...$this->formatPagination($paginated),
+            ];
         });
 
-        return response()->json($result);
+        return $this->success($result['items'], 'Products retrieved successfully', 200, [
+            'links' => $result['links'],
+            'meta' => $result['meta'],
+        ]);
     }
 
     /**
@@ -59,16 +65,14 @@ class ProductController extends Controller
         $productData = Cache::remember($cacheKey, 60, function () use ($id) {
             $product = Product::find($id);
 
-            return $product ? (new ProductResource($product))->response()->getData(true) : null;
+            return $product ? (new ProductResource($product))->resolve() : null;
         });
 
         if (! $productData) {
-            return response()->json([
-                'message' => 'Product not found',
-            ], 404);
+            return $this->error('Product not found', 404);
         }
 
-        return response()->json($productData);
+        return $this->success($productData, 'Product retrieved successfully');
     }
 
     /**
@@ -94,22 +98,22 @@ class ProductController extends Controller
 
         $this->invalidateProductCache($product->id);
 
-        return (new ProductResource($product))
-            ->response()
-            ->setStatusCode(201);
+        return $this->success(
+            (new ProductResource($product))->resolve(),
+            'Product created successfully',
+            201
+        );
     }
 
     /**
      * Update the specified product in storage.
      */
-    public function update(UpdateProductRequest $request, string|int $id): JsonResponse|ProductResource
+    public function update(UpdateProductRequest $request, string|int $id): JsonResponse
     {
         $product = Product::find($id);
 
         if (! $product) {
-            return response()->json([
-                'message' => 'Product not found',
-            ], 404);
+            return $this->error('Product not found', 404);
         }
 
         $validated = $request->validated();
@@ -131,7 +135,10 @@ class ProductController extends Controller
 
         $this->invalidateProductCache($product->id);
 
-        return new ProductResource($product->fresh());
+        return $this->success(
+            (new ProductResource($product->fresh()))->resolve(),
+            'Product updated successfully'
+        );
     }
 
     /**
@@ -142,9 +149,7 @@ class ProductController extends Controller
         $product = Product::find($id);
 
         if (! $product) {
-            return response()->json([
-                'message' => 'Product not found',
-            ], 404);
+            return $this->error('Product not found', 404);
         }
 
         // Clean up locally stored image files from disk if any
@@ -163,9 +168,7 @@ class ProductController extends Controller
 
         $this->invalidateProductCache($id);
 
-        return response()->json([
-            'message' => 'Product deleted successfully',
-        ], 200);
+        return $this->success(null, 'Product deleted successfully');
     }
 
     /**
@@ -193,30 +196,29 @@ class ProductController extends Controller
             }
         }
 
-        return response()->json([
-            'message' => 'Image(s) uploaded successfully',
-            'data' => [
-                'url' => $urls[0] ?? null,
-                'urls' => $urls,
-            ],
-        ], 201);
+        return $this->success([
+            'url' => $urls[0] ?? null,
+            'urls' => $urls,
+        ], 'Image(s) uploaded successfully', 201);
     }
 
     /**
-     * Handle both URL strings and UploadedFile instances.
+     * Handle both URL strings and UploadedFile instances (supports mixed arrays).
      *
      * @return array<string>
      */
     private function handleImages(Request $request): array
     {
         $processed = [];
-        $rawImages = $request->file('images') ?: $request->input('images', []);
+        $textImages = (array) $request->input('images', []);
+        $fileImages = (array) $request->file('images', []);
+        $rawImages = array_merge($textImages, $fileImages);
 
         foreach ($rawImages as $item) {
             if ($item instanceof UploadedFile) {
                 $path = $item->store('products', 'public');
                 $processed[] = url('storage/'.$path);
-            } elseif (is_string($item)) {
+            } elseif (is_string($item) && ! empty($item)) {
                 $processed[] = $item;
             }
         }

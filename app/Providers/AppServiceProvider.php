@@ -27,7 +27,10 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->ip())
                 ->response(function () {
                     return response()->json([
+                        'code' => 429,
+                        'status' => 'error',
                         'message' => 'Too many requests. Maximum 3 requests per 60 seconds.',
+                        'errors' => null,
                     ], 429);
                 });
         });
@@ -35,11 +38,14 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('products-mutate', function (Request $request) {
             $key = ($request->user()?->id ?? $request->ip());
 
-            return Limit::perMinutes(1, 12)
+            return Limit::perSecond(1, 5)
                 ->by($key)
                 ->response(function () {
                     return response()->json([
+                        'code' => 429,
+                        'status' => 'error',
                         'message' => 'Too many requests. Please wait 5 seconds before trying again.',
+                        'errors' => null,
                     ], 429);
                 });
         });
